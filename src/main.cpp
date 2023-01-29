@@ -43,48 +43,53 @@ void setup() {
   // Start serial communication 
   Serial.begin(115200);
 
-  // Log status
-  Serial.print("Setting up device...");
+ 
 
   // Create the BLE Device
   BLEDevice::init(bleServerName);
+  Serial.print("BLE Device initialized.");
 
   // Create the BLE Server
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
+  Serial.print("BLE Server created.");
 
   // Create the BLE Service
   BLEService *helloWorldService = pServer->createService(SERVICE_UUID);
+  Serial.print("BLE Service created.");
 
   // Add BLE Characteristic and Add a BLE Descriptor
-    helloWorldService->addCharacteristic(&helloWorldCharacteristic);
-    helloWorldDescriptor.setValue("Hello World message");
-    helloWorldCharacteristic.addDescriptor(&helloWorldDescriptor);
+  helloWorldService->addCharacteristic(&helloWorldCharacteristic);
+  helloWorldDescriptor.setValue("Hello World message");
+  helloWorldCharacteristic.addDescriptor(&helloWorldDescriptor);
+  Serial.print("BLE characteristic and descriptor set.");
   
   // Start the service
   helloWorldService->start();
+  Serial.print("BLE Service started.");
 
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pServer->getAdvertising()->start();
-  Serial.println("Waiting a client connection to notify...");
+  Serial.println("BLE advertising started. Waiting a client connection to notify...");
 }
 
 void loop() {
   if (deviceConnected) {
     if ((millis() - lastTime) > timerDelay) {
       
-      // create random num to append to msg
-      unsigned long num = random();
-      
-      // Create message string and append num
-      std::string msg = "Hello World! ";
-      msg += (std:string)num;
+      // append random long to msg string
+      char msg_charArray[100];
+      sprintf(msg_charArray, "Hello World!  ID: %ld", random());
+      Serial.print(msg_charArray);
 
-      helloWorldCharacteristic.setValue(msg);
+      // set characteristic value. needs to be std string
+      std::string msg_stdString(msg_charArray);
+      helloWorldCharacteristic.setValue(msg_stdString);
+
+      // notify clients the value was changed
       helloWorldCharacteristic.notify();
-      Serial.print(msg.c_str());
       
       lastTime = millis();
     }
