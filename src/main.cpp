@@ -1,83 +1,92 @@
-/* MY CODE BEFORE COPYING IN EXAMPLE
-#include <Arduino.h>
-#include <ArduinoBLE.h>
-
-// pulled from rootsaid.com example, adapted to from batteryService to
-// generalInfoService 
-// TODO: update to acutal name and 16-bit UUID code
-BLEService generalInfoService("");
-
-void setup() {
-// setup serial connection at a baud rate of 9600, wait for success connect
-  Serial.begin(9600);
-  while(!Serial);
-
-// configure built-in ESP32 dev board LED to use as Bluetooth indicator
-  // pinMode(LED_BUILTIN, OUTPUT);
-
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-}
-*/
-
-/*
-    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
-    Ported to Arduino ESP32 by Evandro Copercini
-    updates by chegewara
-*/
+/*********
+  Rui Santos
+  Complete instructions at https://RandomNerdTutorials.com/esp32-ble-server-client/
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+*********/
 
 #include <BLEDevice.h>
-#include <BLEUtils.h>
 #include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include <esp32-hal.h>
+#include <HardwareSerial.h>
+
+//BLE server name
+#define bleServerName "HelloWorldServer"
+
+// Timer variables
+unsigned long lastTime = 0;
+unsigned long timerDelay = 30000;
+
+bool deviceConnected = false;
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
+#define SERVICE_UUID "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
 
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+// set up hello world characteristic and descriptor to be added later
+BLECharacteristic helloWorldCharacteristic("ca73b3ba-39f6-4ab3-91ae-186dc9577d99", BLECharacteristic::PROPERTY_NOTIFY);
+BLEDescriptor helloWorldDescriptor(BLEUUID((uint16_t)0x2903));
+
+//Setup callbacks onConnect and onDisconnect
+class MyServerCallbacks: public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) {
+    deviceConnected = true;
+  };
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+  }
+};
 
 void setup() {
+  // Start serial communication 
   Serial.begin(115200);
-  Serial.println("Starting BLE work!");
 
-  BLEDevice::init("Long name works now");
+  // Log status
+  Serial.print("Setting up device...");
+
+  // Create the BLE Device
+  BLEDevice::init(bleServerName);
+
+  // Create the BLE Server
   BLEServer *pServer = BLEDevice::createServer();
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  BLECharacteristic *pCharacteristic = pService->createCharacteristic(
-                                         CHARACTERISTIC_UUID,
-                                         BLECharacteristic::PROPERTY_READ |
-                                         BLECharacteristic::PROPERTY_WRITE
-                                       );
+  pServer->setCallbacks(new MyServerCallbacks());
 
-  pCharacteristic->setValue("Hello World says Neil");
-  pService->start();
-  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+  // Create the BLE Service
+  BLEService *helloWorldService = pServer->createService(SERVICE_UUID);
+
+  // Add BLE Characteristic and Add a BLE Descriptor
+    helloWorldService->addCharacteristic(&helloWorldCharacteristic);
+    helloWorldDescriptor.setValue("Hello World message");
+    helloWorldCharacteristic.addDescriptor(&helloWorldDescriptor);
+  
+  // Start the service
+  helloWorldService->start();
+
+  // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-  pAdvertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-  Serial.println("Characteristic defined! Now you can read it in your phone!");
+  pServer->getAdvertising()->start();
+  Serial.println("Waiting a client connection to notify...");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  delay(2000);
-}
-  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-  pAdvertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-  Serial.println("Characteristic defined! Now you can read it in your phone!");
-}
+  if (deviceConnected) {
+    if ((millis() - lastTime) > timerDelay) {
+      
+      // create random num to append to msg
+      unsigned long num = random();
+      
+      // Create message string and append num
+      std::string msg = "Hello World! ";
+      msg += (std:string)num;
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  delay(2000);
+      helloWorldCharacteristic.setValue(msg);
+      helloWorldCharacteristic.notify();
+      Serial.print(msg.c_str());
+      
+      lastTime = millis();
+    }
+  }
 }
