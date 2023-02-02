@@ -41,38 +41,41 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
 void setup() {
   // Start serial communication 
-  Serial.begin(115200);
+  Serial.begin(9600);
 
  
 
   // Create the BLE Device
   BLEDevice::init(bleServerName);
-  Serial.print("BLE Device initialized.");
+  Serial.println("BLE Device initialized.");
 
   // Create the BLE Server
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-  Serial.print("BLE Server created.");
+  Serial.println("BLE Server created.");
 
   // Create the BLE Service
   BLEService *helloWorldService = pServer->createService(SERVICE_UUID);
-  Serial.print("BLE Service created.");
+  Serial.println("BLE Service created.");
 
   // Add BLE Characteristic and Add a BLE Descriptor
   helloWorldService->addCharacteristic(&helloWorldCharacteristic);
   helloWorldDescriptor.setValue("Hello World message");
   helloWorldCharacteristic.addDescriptor(&helloWorldDescriptor);
-  Serial.print("BLE characteristic and descriptor set.");
+  Serial.println("BLE characteristic and descriptor set.");
   
   // Start the service
   helloWorldService->start();
-  Serial.print("BLE Service started.");
+  Serial.println("BLE Service started.");
 
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pServer->getAdvertising()->start();
-  Serial.println("BLE advertising started. Waiting a client connection to notify...");
+  Serial.println("BLE advertising started.");
+  
+  // log waiting status
+  Serial.println("Waiting for connection to notify...");
 }
 
 void loop() {
@@ -93,5 +96,5 @@ void loop() {
       
       lastTime = millis();
     }
-  }
+  } 
 }
