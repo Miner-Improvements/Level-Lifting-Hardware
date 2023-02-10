@@ -53,18 +53,22 @@ delay(1000); // delay of one second
 /* Test sketch for Adafruit BNO08x sensor in UART-RVC mode */
 
 #include "Adafruit_BNO08x_RVC.h"
+#include <HardwareSerial.h>
 
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 
 void setup() {
+  //HardwareSerial MySerial(1);
+  //MySerial.begin(115200, SERIAL_8N1, 3, 17);
+  
   // Wait for serial monitor to open
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial)
     delay(10);
 
   Serial.println("Adafruit BNO08x IMU - UART-RVC mode");
 
-  Serial1.begin(9600); // This is the baud rate specified by the datasheet
+  Serial1.begin(115200, SERIAL_8N1, 3, 17); // This is the baud rate specified by the datasheet
   while (!Serial1)
     delay(10);
 
@@ -73,7 +77,6 @@ void setup() {
     while (1)
       delay(10);
   }
-
   Serial.println("BNO08x found!");
 }
 
@@ -84,6 +87,7 @@ void loop() {
     //Serial.println(F("Not Read"));
     return;
   }
+  //delay(500);
 
   Serial.println();
   Serial.println(F("---------------------------------------"));
