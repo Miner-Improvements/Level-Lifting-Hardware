@@ -85,7 +85,7 @@ void loop() {
       // append random long to msg string
       char msg_charArray[100];
       sprintf(msg_charArray, "Hello World!  ID: %ld", random());
-      Serial.print(msg_charArray);
+      Serial.println(msg_charArray);
 
       // set characteristic value. needs to be std string
       std::string msg_stdString(msg_charArray);
