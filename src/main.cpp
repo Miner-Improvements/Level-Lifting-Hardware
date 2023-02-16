@@ -12,24 +12,34 @@
 #include <esp32-hal.h>
 #include <HardwareSerial.h>
 
-//BLE server name
-#define bleServerName "HelloWorldServer"
 
-// Timer variables
-unsigned long lastTime = 0;
-unsigned long timerDelay = 30000;
-
-bool deviceConnected = false;
+#define bleServerName "BLE UART Device"
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
-#define SERVICE_UUID "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
+#define SERVICE_UUID_UART       "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
+#define CHARACTERISTIC_UUID_TX  "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
+#define CHARACTERISTIC_UUID_RX  "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
 
-// set up hello world characteristic and descriptor to be added later
-BLECharacteristic helloWorldCharacteristic("ca73b3ba-39f6-4ab3-91ae-186dc9577d99", BLECharacteristic::PROPERTY_NOTIFY);
+
+// variable needed to run this program
+BLEServer *pServer = NULL;
+BLEService *pService = NULL;
+BLEAdvertising *pAdvertising = NULL;
+BLECharacteristic *pTxCharacteristic = NULL;
+BLECharacteristic *pRxCharacteristic = NULL;
+bool deviceConnected = false;
+bool oldDeviceConnected = false;
+uint8_t txValue = 0;
+
+// CHANGE
+// set up characteristic and descriptor to be added later
+BLECharacteristic helloWorldCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
 BLEDescriptor helloWorldDescriptor(BLEUUID((uint16_t)0x2903));
 
-//Setup callbacks onConnect and onDisconnect
+
+// ***** Setup Callbacks *****
+
 class MyServerCallbacks: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
@@ -39,38 +49,66 @@ class MyServerCallbacks: public BLEServerCallbacks {
   }
 };
 
+class MyRXCharacteristicCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      std::string rxValue = pCharacteristic->getValue();
+
+      if (rxValue.length() > 0) {
+        Serial.println("*********");
+        Serial.print("Received Value: ");
+        for (int i = 0; i < rxValue.length(); i++)
+          Serial.print(rxValue[i]);
+
+        Serial.println();
+        Serial.println("*********");
+      }
+    }
+};
+
+// ***** End Setup Callbacks *****
+
+
 void setup() {
   // Start serial communication 
   Serial.begin(9600);
-
- 
 
   // Create the BLE Device
   BLEDevice::init(bleServerName);
   Serial.println("BLE Device initialized.");
 
   // Create the BLE Server
-  BLEServer *pServer = BLEDevice::createServer();
+  pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-  Serial.println("BLE Server created.");
+  Serial.println("BLE Server created, callbacks set.");
 
   // Create the BLE Service
-  BLEService *helloWorldService = pServer->createService(SERVICE_UUID);
+  pService = pServer->createService(SERVICE_UUID_UART);
   Serial.println("BLE Service created.");
 
-  // Add BLE Characteristic and Add a BLE Descriptor
-  helloWorldService->addCharacteristic(&helloWorldCharacteristic);
-  helloWorldDescriptor.setValue("Hello World message");
-  helloWorldCharacteristic.addDescriptor(&helloWorldDescriptor);
-  Serial.println("BLE characteristic and descriptor set.");
-  
+  // Create and add characteristics and descriptors
+  pTxCharacteristic = pService->createCharacteristic(
+                        CHARACTERISTIC_UUID_TX,
+                        BLECharacteristic::PROPERTY_NOTIFY |
+                        BLECharacteristic::PROPERTY_READ
+                      );
+  pTxCharacteristic->addDescriptor(new BLE2902());
+
+  pRxCharacteristic = pService->createCharacteristic(
+                        CHARACTERISTIC_UUID_RX,
+                        BLECharacteristic::PROPERTY_WRITE
+                      );
+  pRxCharacteristic->addDescriptor(new BLE2902());
+  pRxCharacteristic->setCallbacks(new MyRXCharacteristicCallbacks());
+
+  Serial.println("BLE characteristics, descriptors, and callbacks set.");
+
   // Start the service
-  helloWorldService->start();
+  pService->start();
   Serial.println("BLE Service started.");
 
   // Start advertising
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID_UART);
   pServer->getAdvertising()->start();
   Serial.println("BLE advertising started.");
   
@@ -80,21 +118,23 @@ void setup() {
 
 void loop() {
   if (deviceConnected) {
-    if ((millis() - lastTime) > timerDelay) {
-      
-      // append random long to msg string
-      char msg_charArray[100];
-      sprintf(msg_charArray, "Hello World!  ID: %ld", random());
-      Serial.println(msg_charArray);
+    pTxCharacteristic->setValue(&txValue, 1);
+    pTxCharacteristic->notify();
+    txValue++;
+    delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+	}
 
-      // set characteristic value. needs to be std string
-      std::string msg_stdString(msg_charArray);
-      helloWorldCharacteristic.setValue(msg_stdString);
-
-      // notify clients the value was changed
-      helloWorldCharacteristic.notify();
-      
-      lastTime = millis();
-    }
-  } 
+  // disconnecting
+  if (!deviceConnected && oldDeviceConnected) {
+    delay(500); // give the bluetooth stack the chance to get things ready
+    pServer->startAdvertising(); // restart advertising
+    Serial.println("start advertising");
+    oldDeviceConnected = deviceConnected;
+  }
+  
+  // connecting
+  if (deviceConnected && !oldDeviceConnected) {
+  // do stuff here on connecting
+    oldDeviceConnected = deviceConnected;
+  }
 }
