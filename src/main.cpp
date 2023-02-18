@@ -1,9 +1,7 @@
-/*********
-  Rui Santos
-  Complete instructions at https://RandomNerdTutorials.com/esp32-ble-server-client/
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*********/
+/*  Senior Design 2023 - Miner Improvements: Level Lifting
+*   Information to go here. BLE only right now
+* 
+*/
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -31,20 +29,20 @@
 // setup variable needed to run this program
 #pragma region Variables
 
-BLEServer *pServer = NULL;
-BLEService *pService_UART = NULL;
-BLECharacteristic *pTxCharacteristic = NULL;
-BLECharacteristic *pRxCharacteristic = NULL;
+BLEServer *pServer = nullptr;
+BLEService *pService_UART = nullptr;
+BLECharacteristic *pTxCharacteristic = nullptr;
+BLECharacteristic *pRxCharacteristic = nullptr;
 
-BLEService *pService_IMU = NULL;
-BLECharacteristic *pYawCharacteristic = NULL;
-BLECharacteristic *pPitchCharacteristic = NULL;
-BLECharacteristic *pRollCharacteristic = NULL;
-BLECharacteristic *pXAccelCharacteristic = NULL;
-BLECharacteristic *pYAccelCharacteristic = NULL;
-BLECharacteristic *pZAccelCharacteristic = NULL;
+BLEService *pService_IMU = nullptr;
+BLECharacteristic *pYawCharacteristic = nullptr;
+BLECharacteristic *pPitchCharacteristic = nullptr;
+BLECharacteristic *pRollCharacteristic = nullptr;
+BLECharacteristic *pXAccelCharacteristic = nullptr;
+BLECharacteristic *pYAccelCharacteristic = nullptr;
+BLECharacteristic *pZAccelCharacteristic = nullptr;
 
-BLEAdvertising *pAdvertising = NULL;
+BLEAdvertising *pAdvertising = nullptr;
 
 bool deviceConnected = false;
 bool advertising = false; 
