@@ -52,14 +52,9 @@ bool advertising = false;
 uint8_t txValue = 0;
 
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
+BNO08x_RVC_Data heading;
 
 #pragma endregion Variables
-
-// TODO: REMOVE?
-// set up characteristic and descriptor to be added later
-// BLECharacteristic helloWorldCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
-// BLEDescriptor helloWorldDescriptor(BLEUUID((uint16_t)0x2903));
-
 
 // ***** Start Setup Callbacks *****
 #pragma region Callbacks
@@ -209,6 +204,41 @@ void setup() {
 }
 
 void loop() {
+
+  if (!rvc.read(&heading)) {
+    Serial.println(F("Not Read"));
+    // return;
+  }
+  else {
+    if (deviceConnected) {
+      // write IMU data to characteristics
+      pYawCharacteristic->setValue(heading.yaw);
+      pYawCharacteristic->notify();
+    }
+
+    // write IMU to serial
+    Serial.println();
+    Serial.println(F("---------------------------------------"));
+    Serial.println(F("Principal Axes:"));
+    Serial.println(F("---------------------------------------"));
+    Serial.print(F("Yaw: "));
+    Serial.print(heading.yaw);
+    Serial.print(F("\tPitch: "));
+    Serial.print(heading.pitch);
+    Serial.print(F("\tRoll: "));
+    Serial.println(heading.roll);
+    Serial.println(F("---------------------------------------"));
+    Serial.println(F("Acceleration"));
+    Serial.println(F("---------------------------------------"));
+    Serial.print(F("X: "));
+    Serial.print(heading.x_accel);
+    Serial.print(F("\tY: "));
+    Serial.print(heading.y_accel);
+    Serial.print(F("\tZ: "));
+    Serial.println(heading.z_accel);
+    Serial.println(F("---------------------------------------"));
+  }
+
   if (deviceConnected) {
     // incrementally set txValue for testing purposes, then notify
     pTxCharacteristic->setValue(&txValue, 1);
@@ -230,36 +260,5 @@ void loop() {
     // do stuff here on connecting
     advertising = false; // could also be put in onConnected callback
   }
-  
-  BNO08x_RVC_Data heading;
 
-  if (!rvc.read(&heading)) {
-    //Serial.println(F("Not Read"));
-    return;
-  }
-  //delay(500);
-
-  Serial.println();
-  Serial.println(F("---------------------------------------"));
-  Serial.println(F("Principal Axes:"));
-  Serial.println(F("---------------------------------------"));
-  Serial.print(F("Yaw: "));
-  Serial.print(heading.yaw);
-  Serial.print(F("\tPitch: "));
-  Serial.print(heading.pitch);
-  Serial.print(F("\tRoll: "));
-  Serial.println(heading.roll);
-  Serial.println(F("---------------------------------------"));
-  Serial.println(F("Acceleration"));
-  Serial.println(F("---------------------------------------"));
-  Serial.print(F("X: "));
-  Serial.print(heading.x_accel);
-  Serial.print(F("\tY: "));
-  Serial.print(heading.y_accel);
-  Serial.print(F("\tZ: "));
-  Serial.println(heading.z_accel);
-  Serial.println(F("---------------------------------------"));
-
-
-  //  delay(200);
 }
