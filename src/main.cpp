@@ -176,7 +176,7 @@ void setup() {
   pYAccelCharacteristic->addDescriptor(new BLE2902); 
 
   pZAccelCharacteristic = pService_IMU->createCharacteristic(
-                            CHARACTERISTIC_UUID_Y_ACCEL,
+                            CHARACTERISTIC_UUID_Z_ACCEL,
                             BLECharacteristic::PROPERTY_NOTIFY |
                             BLECharacteristic::PROPERTY_READ
   );
