@@ -207,6 +207,7 @@ void loop() {
 
   if (!rvc.read(&heading)) {
     Serial.println(F("Not Read"));
+    delay(1000);
     // return;
   }
   else {
@@ -214,6 +215,16 @@ void loop() {
       // write IMU data to characteristics
       pYawCharacteristic->setValue(heading.yaw);
       pYawCharacteristic->notify();
+      pPitchCharacteristic->setValue(heading.pitch);
+      pPitchCharacteristic->notify();
+      pRollCharacteristic->setValue(heading.roll);
+      pRollCharacteristic->notify();
+      pXAccelCharacteristic->setValue(heading.x_accel);
+      pXAccelCharacteristic->notify();
+      pYAccelCharacteristic->setValue(heading.y_accel);
+      pYAccelCharacteristic->notify();
+      pZAccelCharacteristic->setValue(heading.z_accel);
+      pZAccelCharacteristic->notify();
     }
 
     // write IMU to serial
