@@ -214,17 +214,17 @@ void loop() {
     if (deviceConnected) {
       // write IMU data to characteristics
       pYawCharacteristic->setValue(heading.yaw);
-      pYawCharacteristic->notify();
+      //pYawCharacteristic->notify();
       pPitchCharacteristic->setValue(heading.pitch);
-      pPitchCharacteristic->notify();
+      //pPitchCharacteristic->notify();
       pRollCharacteristic->setValue(heading.roll);
-      pRollCharacteristic->notify();
+      //pRollCharacteristic->notify();
       pXAccelCharacteristic->setValue(heading.x_accel);
-      pXAccelCharacteristic->notify();
+      //pXAccelCharacteristic->notify();
       pYAccelCharacteristic->setValue(heading.y_accel);
-      pYAccelCharacteristic->notify();
+      //pYAccelCharacteristic->notify();
       pZAccelCharacteristic->setValue(heading.z_accel);
-      pZAccelCharacteristic->notify();
+      //pZAccelCharacteristic->notify();
     }
 
     // write IMU to serial
