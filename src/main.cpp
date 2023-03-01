@@ -207,7 +207,7 @@ void loop() {
 
   if (!rvc.read(&heading)) {
     Serial.println(F("Not Read"));
-    delay(1000);
+    // delay(1000);
     // return;
   }
   else {
@@ -234,18 +234,18 @@ void loop() {
     Serial.println(F("---------------------------------------"));
     Serial.print(F("Yaw: "));
     Serial.print(heading.yaw);
-    Serial.print(F("\tPitch: "));
+    Serial.print(F("   Pitch: "));
     Serial.print(heading.pitch);
-    Serial.print(F("\tRoll: "));
+    Serial.print(F("   Roll: "));
     Serial.println(heading.roll);
     Serial.println(F("---------------------------------------"));
-    Serial.println(F("Acceleration"));
+    Serial.println(F("Acceleration:"));
     Serial.println(F("---------------------------------------"));
     Serial.print(F("X: "));
     Serial.print(heading.x_accel);
-    Serial.print(F("\tY: "));
+    Serial.print(F("        Y: "));
     Serial.print(heading.y_accel);
-    Serial.print(F("\tZ: "));
+    Serial.print(F("        Z: "));
     Serial.println(heading.z_accel);
     Serial.println(F("---------------------------------------"));
   }
