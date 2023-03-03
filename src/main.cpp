@@ -28,6 +28,7 @@
 #define CHARACTERISTIC_UUID_X_ACCEL     "f881bd9e-1a9e-447c-b0a7-298c1069489e"
 #define CHARACTERISTIC_UUID_Y_ACCEL     "c58d3d80-bb7b-4d22-9b1c-55a4c39e7308"
 #define CHARACTERISTIC_UUID_Z_ACCEL     "aa744b51-7483-4d48-b973-df3eb0a05ff7"
+#define CHARACTERISTIC_UUID_TIMESTAMP   "4a7c0369-4188-47f3-b1ee-82784ee99d2a"
 
 // setup variable needed to run this program
 #pragma region Variables
@@ -44,12 +45,14 @@ BLECharacteristic *pRollCharacteristic = nullptr;
 BLECharacteristic *pXAccelCharacteristic = nullptr;
 BLECharacteristic *pYAccelCharacteristic = nullptr;
 BLECharacteristic *pZAccelCharacteristic = nullptr;
+BLECharacteristic *pTimestampCharacteristic = nullptr;
 
 BLEAdvertising *pAdvertising = nullptr;
 
 bool deviceConnected = false;
 bool advertising = false; 
 uint8_t txValue = 0;
+hw_timer_t *Timer1 = nullptr;
 
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
 BNO08x_RVC_Data heading;
@@ -123,7 +126,7 @@ void setup() {
   pService_UART = pServer->createService(SERVICE_UUID_UART);
   // NOTE: each characteristic wiithingneeds 3 handles, 
   //       so numHandles = 3 * num characteristics
-  pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 18);
+  pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 21);
   Serial.println("BLE Services created.");
 
   // Create characteristics and add descriptors
@@ -184,6 +187,13 @@ void setup() {
   );
   pZAccelCharacteristic->addDescriptor(new BLE2902);
 
+  pTimestampCharacteristic = pService_IMU->createCharacteristic(
+                            CHARACTERISTIC_UUID_TIMESTAMP,
+                            BLECharacteristic::PROPERTY_NOTIFY |
+                            BLECharacteristic::PROPERTY_READ
+  );
+  pTimestampCharacteristic->addDescriptor(new BLE2902);
+
   Serial.println("BLE characteristics, descriptors, and callbacks set.");
   
   #pragma endregion Characteristics
@@ -203,6 +213,9 @@ void setup() {
   
   // log waiting status
   Serial.println("Waiting for connection...");
+
+  Timer1 = timerBegin(1,1,true);
+  Serial.println("Timer1 started.");
 }
 
 void loop() {
@@ -227,6 +240,7 @@ void loop() {
       //pYAccelCharacteristic->notify();
       pZAccelCharacteristic->setValue(heading.z_accel);
       //pZAccelCharacteristic->notify();
+      pTimestampCharacteristic->setValue((uint8_t*)timerRead(Timer1), 8);
     }
 
     // write IMU to serial
