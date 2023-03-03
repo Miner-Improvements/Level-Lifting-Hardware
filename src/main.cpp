@@ -124,7 +124,7 @@ void setup() {
 
   // Create the BLE Service
   pService_UART = pServer->createService(SERVICE_UUID_UART);
-  // NOTE: each characteristic wiithingneeds 3 handles, 
+  // NOTE: each characteristic within service needs 3 handles, 
   //       so numHandles = 3 * num characteristics
   pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 21);
   Serial.println("BLE Services created.");
