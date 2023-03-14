@@ -146,16 +146,16 @@ void setup() {
   pRxCharacteristic->setCallbacks(new MyRXCharacteristicCallbacks());
 
   pYawCharacteristic = pService_IMU->createCharacteristic(
-                        CHARACTERISTIC_UUID_YAW,
-                        BLECharacteristic::PROPERTY_NOTIFY |
-                        BLECharacteristic::PROPERTY_READ
+                         CHARACTERISTIC_UUID_YAW,
+                         BLECharacteristic::PROPERTY_NOTIFY |
+                         BLECharacteristic::PROPERTY_READ
   );
   pYawCharacteristic->addDescriptor(new BLE2902); 
 
   pPitchCharacteristic = pService_IMU->createCharacteristic(
-                          CHARACTERISTIC_UUID_PITCH,
-                          BLECharacteristic::PROPERTY_NOTIFY |
-                          BLECharacteristic::PROPERTY_READ
+                           CHARACTERISTIC_UUID_PITCH,
+                           BLECharacteristic::PROPERTY_NOTIFY |
+                           BLECharacteristic::PROPERTY_READ
   );
   pPitchCharacteristic->addDescriptor(new BLE2902); 
 
@@ -188,9 +188,9 @@ void setup() {
   pZAccelCharacteristic->addDescriptor(new BLE2902);
 
   pTimestampCharacteristic = pService_IMU->createCharacteristic(
-                            CHARACTERISTIC_UUID_TIMESTAMP,
-                            BLECharacteristic::PROPERTY_NOTIFY |
-                            BLECharacteristic::PROPERTY_READ
+                               CHARACTERISTIC_UUID_TIMESTAMP,
+                               BLECharacteristic::PROPERTY_NOTIFY |
+                               BLECharacteristic::PROPERTY_READ
   );
   pTimestampCharacteristic->addDescriptor(new BLE2902);
 
@@ -214,6 +214,7 @@ void setup() {
   // log waiting status
   Serial.println("Waiting for connection...");
 
+  // TODO: Make sure this is initializing the timer properly
   Timer1 = timerBegin(1,1,true);
   Serial.println("Timer1 started.");
 }
