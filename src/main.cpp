@@ -215,15 +215,15 @@ void setup() {
   Serial.println("Waiting for connection...");
 
   // TODO: Make sure this is initializing the timer properly
-  Timer1 = timerBegin(1,1,true);
+  Timer1 = timerBegin(1,2,true);
   Serial.println("Timer1 started.");
 }
 
 void loop() {
 
   if (!rvc.read(&heading)) {
-    Serial.println(F("Not Read"));
-    // delay(1000);
+    Serial.write("Not Read\n");
+    delay(10);
     // return;
   }
   else {
@@ -243,6 +243,9 @@ void loop() {
       //pZAccelCharacteristic->notify();
       pTimestampCharacteristic->setValue((uint8_t*)timerRead(Timer1), 8);
     }
+
+    Serial.write("Read successfully!\n");
+    delay(10);
 
     // write IMU to serial
 /*    Serial.println();
