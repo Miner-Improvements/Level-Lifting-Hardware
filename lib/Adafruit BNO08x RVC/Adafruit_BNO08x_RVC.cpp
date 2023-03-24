@@ -70,12 +70,12 @@ bool Adafruit_BNO08x_RVC::begin(Stream *theSerial) {
  */
 bool Adafruit_BNO08x_RVC::read(BNO08x_RVC_Data *heading) {
   if (!heading) {
-    Serial.println("Bad heading in read() function.");
+    Serial.write("Bad heading in read() function.\n");
     return false;
   }
 
   if (!serial_dev->available()) {
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:77.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:77.\n");
     return false;
   }
 
@@ -83,32 +83,33 @@ bool Adafruit_BNO08x_RVC::read(BNO08x_RVC_Data *heading) {
   // fix until a better timing solution is devised.
   // TODO:  Replace with interupts?
   while (serial_dev->peek() != 0xAA) {
-    Serial.print("Error at Adafruit_BNO08x_RVC.cpp:86. Currently in buffer:");
-    Serial.println(serial_dev->peek());
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:86. Currently in buffer: ");
+    Serial.write(serial_dev->peek());
+    Serial.write("\n");
     serial_dev->read();
     //return false;
   }
   // Now read all 19 bytes
 
   if (serial_dev->available() < 19) {
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:94.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:94.\n");
     return false;
   }
   // at this point we know there's at least 19 bytes available and the first
   if (serial_dev->read() != 0xAA) {
     // shouldn't happen baecause peek said it was 0xAA
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:100.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:100.\n");
     return false;
   }
   // make sure the next byte is the second 0xAA
   if (serial_dev->read() != 0xAA) {
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:105.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:105.\n");
     return false;
   }
   uint8_t buffer[19];
   // ok, we've got our header, read the actual data+crc
   if (!serial_dev->readBytes(buffer, 17)) {
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:111.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:111.\n");
     return false;
   };
 
@@ -118,7 +119,7 @@ bool Adafruit_BNO08x_RVC::read(BNO08x_RVC_Data *heading) {
     sum += buffer[i];
   }
   if (sum != buffer[16]) {
-    Serial.println("Error at Adafruit_BNO08x_RVC.cpp:121.");
+    Serial.write("Error at Adafruit_BNO08x_RVC.cpp:121.\n");
     return false;
   }
 

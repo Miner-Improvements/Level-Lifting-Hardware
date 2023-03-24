@@ -245,7 +245,7 @@ void loop() {
     }
 
     // write IMU to serial
-    Serial.println();
+/*    Serial.println();
     Serial.println(F("---------------------------------------"));
     Serial.println(F("Principal Axes:"));
     Serial.println(F("---------------------------------------"));
@@ -265,6 +265,7 @@ void loop() {
     Serial.print(F("        Z: "));
     Serial.println(heading.z_accel);
     Serial.println(F("---------------------------------------"));
+*/
   }
 
   if (deviceConnected) {
