@@ -238,72 +238,53 @@ void setup() {
 }
 
 void loop() {
-if(interruptCounter)
-{
-  if (!rvc.read(&heading)) {
-    Serial.write("Not Read\n");
-    // return;
-  }
-  else {
-    if (deviceConnected) {
-      // write IMU data to characteristics and notify for each
-      pYawCharacteristic->setValue(heading.yaw);
-      pYawCharacteristic->notify();
-      // Serial.write("Yaw updated.\n");
-      pPitchCharacteristic->setValue(heading.pitch);
-      pPitchCharacteristic->notify();
-      // Serial.write("Pitch updated.\n");
-      pRollCharacteristic->setValue(heading.roll);
-      pRollCharacteristic->notify();
-      // Serial.write("Roll updated.\n");
-      pXAccelCharacteristic->setValue(heading.x_accel);
-      pXAccelCharacteristic->notify();
-      // Serial.write("X accel updated.\n");
-      pYAccelCharacteristic->setValue(heading.y_accel);
-      pYAccelCharacteristic->notify();
-      // Serial.write("Y accel updated.\n");
-      pZAccelCharacteristic->setValue(heading.z_accel);
-      pZAccelCharacteristic->notify();
-      // Serial.write("Z accel updated.\n");
-      uint64_t temp = timerRead(Timer1);
-      pTimestampCharacteristic->setValue((uint8_t*)&temp, 8);
-      pTimestampCharacteristic->notify();
-      // Serial.write("Timer updated.\n");
+
+  // only deal with BLE characteristics when device connected to listen
+  if (deviceConnected) {
+    if(interruptCounter) {
+      
+      if (!rvc.read(&heading)) {  // read rvc data 
+        Serial.write("Not Read\n"); // indiciate if unsuccessful
+      }
+      else {
+        // write IMU data to characteristics and notify for each
+        // TODO: dtmn if notifications for each characterisitc are necessary
+        //       could just notify timer and let that be the indicator
+        pYawCharacteristic->setValue(heading.yaw);
+        pYawCharacteristic->notify();
+        // Serial.write("Yaw updated.\n");
+        pPitchCharacteristic->setValue(heading.pitch);
+        pPitchCharacteristic->notify();
+        // Serial.write("Pitch updated.\n");
+        pRollCharacteristic->setValue(heading.roll);
+        pRollCharacteristic->notify();
+        // Serial.write("Roll updated.\n");
+        pXAccelCharacteristic->setValue(heading.x_accel);
+        pXAccelCharacteristic->notify();
+        // Serial.write("X accel updated.\n");
+        pYAccelCharacteristic->setValue(heading.y_accel);
+        pYAccelCharacteristic->notify();
+        // Serial.write("Y accel updated.\n");
+        pZAccelCharacteristic->setValue(heading.z_accel);
+        pZAccelCharacteristic->notify();
+        // Serial.write("Z accel updated.\n");
+        uint64_t temp = timerRead(Timer1);
+        pTimestampCharacteristic->setValue((uint8_t*)&temp, 8);
+        pTimestampCharacteristic->notify();
+        // Serial.write("Timer updated.\n");
+
+        Serial.write("Read successfully!\n");
+        
+        interruptCounter = 0; // reset for timer ISR to trigger
+      }
     }
 
-    Serial.write("Read successfully!\n");
-
-    // write IMU to serial
-/*    Serial.println();
-    Serial.println(F("---------------------------------------"));
-    Serial.println(F("Principal Axes:"));
-    Serial.println(F("---------------------------------------"));
-    Serial.print(F("Yaw: "));
-    Serial.print(heading.yaw);
-    Serial.print(F("   Pitch: "));
-    Serial.print(heading.pitch);
-    Serial.print(F("   Roll: "));
-    Serial.println(heading.roll);
-    Serial.println(F("---------------------------------------"));
-    Serial.println(F("Acceleration:"));
-    Serial.println(F("---------------------------------------"));
-    Serial.print(F("X: "));
-    Serial.print(heading.x_accel);
-    Serial.print(F("        Y: "));
-    Serial.print(heading.y_accel);
-    Serial.print(F("        Z: "));
-    Serial.println(heading.z_accel);
-    Serial.println(F("---------------------------------------"));
-*/
-  }
-
-  if (deviceConnected) {
     // incrementally set txValue for testing purposes, then notify
-    pTxCharacteristic->setValue(&txValue, 1);
-    pTxCharacteristic->notify();
-    txValue++;
+    // pTxCharacteristic->setValue(&txValue, 1);
+    // pTxCharacteristic->notify();
+    // txValue++;
     //delay(10); // bluetooth stack will go into congestion, if too many packets are sent
-	}
+  }
 
   // disconnecting
   if (!deviceConnected && !advertising) {
@@ -319,7 +300,4 @@ if(interruptCounter)
     advertising = false; // could also be put in onConnected callback
   }
 
-  //delay(10); // delay to match IMU data rate of 100Hz
-  interruptCounter = 0;
-}
 }
