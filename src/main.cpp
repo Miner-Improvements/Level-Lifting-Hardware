@@ -65,11 +65,11 @@ BNO08x_RVC_Data heading;
 class MyServerCallbacks: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
-    Serial.println("Device connected");
+    Serial.write("Device connected\n");
   };
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
-    Serial.println("Device disconnected");
+    Serial.write("Device disconnected\n");
   }
 };
 
@@ -146,16 +146,16 @@ void setup() {
   pRxCharacteristic->setCallbacks(new MyRXCharacteristicCallbacks());
 
   pYawCharacteristic = pService_IMU->createCharacteristic(
-                        CHARACTERISTIC_UUID_YAW,
-                        BLECharacteristic::PROPERTY_NOTIFY |
-                        BLECharacteristic::PROPERTY_READ
+                         CHARACTERISTIC_UUID_YAW,
+                         BLECharacteristic::PROPERTY_NOTIFY |
+                         BLECharacteristic::PROPERTY_READ
   );
   pYawCharacteristic->addDescriptor(new BLE2902); 
 
   pPitchCharacteristic = pService_IMU->createCharacteristic(
-                          CHARACTERISTIC_UUID_PITCH,
-                          BLECharacteristic::PROPERTY_NOTIFY |
-                          BLECharacteristic::PROPERTY_READ
+                           CHARACTERISTIC_UUID_PITCH,
+                           BLECharacteristic::PROPERTY_NOTIFY |
+                           BLECharacteristic::PROPERTY_READ
   );
   pPitchCharacteristic->addDescriptor(new BLE2902); 
 
@@ -188,9 +188,9 @@ void setup() {
   pZAccelCharacteristic->addDescriptor(new BLE2902);
 
   pTimestampCharacteristic = pService_IMU->createCharacteristic(
-                            CHARACTERISTIC_UUID_TIMESTAMP,
-                            BLECharacteristic::PROPERTY_NOTIFY |
-                            BLECharacteristic::PROPERTY_READ
+                               CHARACTERISTIC_UUID_TIMESTAMP,
+                               BLECharacteristic::PROPERTY_NOTIFY |
+                               BLECharacteristic::PROPERTY_READ
   );
   pTimestampCharacteristic->addDescriptor(new BLE2902);
 
@@ -214,37 +214,48 @@ void setup() {
   // log waiting status
   Serial.println("Waiting for connection...");
 
-  Timer1 = timerBegin(1,1,true);
+  // TODO: Make sure this is initializing the timer properly
+  Timer1 = timerBegin(1,2,true);
   Serial.println("Timer1 started.");
 }
 
 void loop() {
 
   if (!rvc.read(&heading)) {
-    Serial.println(F("Not Read"));
-    // delay(1000);
+    Serial.write("Not Read\n");
     // return;
   }
   else {
     if (deviceConnected) {
-      // write IMU data to characteristics
+      // write IMU data to characteristics and notify for each
       pYawCharacteristic->setValue(heading.yaw);
-      //pYawCharacteristic->notify();
+      pYawCharacteristic->notify();
+      // Serial.write("Yaw updated.\n");
       pPitchCharacteristic->setValue(heading.pitch);
-      //pPitchCharacteristic->notify();
+      pPitchCharacteristic->notify();
+      // Serial.write("Pitch updated.\n");
       pRollCharacteristic->setValue(heading.roll);
-      //pRollCharacteristic->notify();
+      pRollCharacteristic->notify();
+      // Serial.write("Roll updated.\n");
       pXAccelCharacteristic->setValue(heading.x_accel);
-      //pXAccelCharacteristic->notify();
+      pXAccelCharacteristic->notify();
+      // Serial.write("X accel updated.\n");
       pYAccelCharacteristic->setValue(heading.y_accel);
-      //pYAccelCharacteristic->notify();
+      pYAccelCharacteristic->notify();
+      // Serial.write("Y accel updated.\n");
       pZAccelCharacteristic->setValue(heading.z_accel);
-      //pZAccelCharacteristic->notify();
-      pTimestampCharacteristic->setValue((uint8_t*)timerRead(Timer1), 8);
+      pZAccelCharacteristic->notify();
+      // Serial.write("Z accel updated.\n");
+      uint64_t temp = timerRead(Timer1);
+      pTimestampCharacteristic->setValue((uint8_t*)&temp, 8);
+      pTimestampCharacteristic->notify();
+      // Serial.write("Timer updated.\n");
     }
 
+    Serial.write("Read successfully!\n");
+
     // write IMU to serial
-    Serial.println();
+/*    Serial.println();
     Serial.println(F("---------------------------------------"));
     Serial.println(F("Principal Axes:"));
     Serial.println(F("---------------------------------------"));
@@ -264,6 +275,7 @@ void loop() {
     Serial.print(F("        Z: "));
     Serial.println(heading.z_accel);
     Serial.println(F("---------------------------------------"));
+*/
   }
 
   if (deviceConnected) {
@@ -271,7 +283,7 @@ void loop() {
     pTxCharacteristic->setValue(&txValue, 1);
     pTxCharacteristic->notify();
     txValue++;
-    delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+    //delay(10); // bluetooth stack will go into congestion, if too many packets are sent
 	}
 
   // disconnecting
@@ -288,4 +300,5 @@ void loop() {
     advertising = false; // could also be put in onConnected callback
   }
 
+  delay(10); // delay to match IMU data rate of 100Hz
 }
