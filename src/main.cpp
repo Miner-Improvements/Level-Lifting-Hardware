@@ -49,9 +49,12 @@ BLECharacteristic *pTimestampCharacteristic = nullptr;
 
 BLEAdvertising *pAdvertising = nullptr;
 
+bool interruptCounter = false; // Loop occurs after 100 Hz ISR 
 bool deviceConnected = false;
 bool advertising = false; 
 uint8_t txValue = 0;
+hw_timer_t *timer = nullptr; // Timer for ISR
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED; // Used for Synchronizing ISR variable interruptCounter
 hw_timer_t *Timer1 = nullptr;
 
 Adafruit_BNO08x_RVC rvc = Adafruit_BNO08x_RVC();
@@ -91,6 +94,13 @@ class MyRXCharacteristicCallbacks: public BLECharacteristicCallbacks {
 
 #pragma endregion Callbacks
 // ***** End Setup Callbacks *****
+
+//Polling ISR at 100 Hz to trigger loop
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
+}
 
 
 void setup() {
@@ -217,10 +227,19 @@ void setup() {
   // TODO: Make sure this is initializing the timer properly
   Timer1 = timerBegin(1,2,true);
   Serial.println("Timer1 started.");
+
+  // ISR timer with divider of 80, making clock frequency = 1 MHz
+  // Alarm occurs at 10000 cycles, making ISR frequency 1000000/10000 = 100 Hz
+  // Start timer and enable alarm
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 10000, true);
+  timerAlarmEnable(timer);
 }
 
 void loop() {
-
+if(interruptCounter)
+{
   if (!rvc.read(&heading)) {
     Serial.write("Not Read\n");
     // return;
@@ -300,5 +319,7 @@ void loop() {
     advertising = false; // could also be put in onConnected callback
   }
 
-  delay(10); // delay to match IMU data rate of 100Hz
+  //delay(10); // delay to match IMU data rate of 100Hz
+  interruptCounter = 0;
+}
 }
