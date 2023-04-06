@@ -2,7 +2,7 @@
 #include <HardwareSerial.h>
 
 Adafruit_BNO08x_RVC *rvc;
-BNO08x_RVC_Data *heading;
+BNO08x_RVC_Data *heading = new BNO08x_RVC_Data();
 
 void imu_init()
 {
