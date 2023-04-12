@@ -49,13 +49,13 @@ void MyRXCharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 
     if (rxValue.length() > 0)
     {
-        Serial.println("*********");
+        Serial.write("*********");
         Serial.print("Received Value: ");
         for (int i = 0; i < rxValue.length(); i++)
             Serial.print(rxValue[i]);
 
-        Serial.println();
-        Serial.println("*********");
+        Serial.write("\n");
+        Serial.write("*********");
     }
 }
 
@@ -63,19 +63,19 @@ void bluetooth_init()
 {
     // Create the BLE Device
     BLEDevice::init(bleServerName);
-    Serial.println("BLE device initialized.");
+    Serial.write("BLE device initialized.\n");
 
     // Create the BLE Server
     pServer = BLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks());
-    Serial.println("BLE Server created, callbacks set.");
+    Serial.write("BLE Server created, callbacks set.\n");
 
     // Create the BLE Service
     pService_UART = pServer->createService(SERVICE_UUID_UART);
     // NOTE: each characteristic within service needs 3 handles,
     //       so numHandles = 3 * num characteristics
     pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 21);
-    Serial.println("BLE Services created.");
+    Serial.write("BLE Services created.\n");
 
     // Create characteristics and add descriptors
     pTxCharacteristic = pService_UART->createCharacteristic(
@@ -132,12 +132,12 @@ void bluetooth_init()
             BLECharacteristic::PROPERTY_READ);
     pTimestampCharacteristic->addDescriptor(new BLE2902);
 
-    Serial.println("BLE characteristics, descriptors, and callbacks set.");
+    Serial.write("BLE characteristics, descriptors, and callbacks set.");
 
     // Start the service
     pService_UART->start();
     pService_IMU->start();
-    Serial.println("BLE Services started.");
+    Serial.write("BLE Services started.\n");
 
     // Start advertising
     pAdvertising = BLEDevice::getAdvertising();
@@ -145,14 +145,14 @@ void bluetooth_init()
     pAdvertising->addServiceUUID(SERVICE_UUID_IMU);
     pServer->getAdvertising()->start();
     advertising = true;
-    Serial.println("BLE advertising started.");
+    Serial.write("BLE advertising started.\n");
 
     // log waiting status
-    Serial.println("Waiting for connection...");
+    Serial.write("Waiting for connection...\n");
 
     // TODO: Make sure this is initializing the timer properly
     Timer1 = timerBegin(1, 2, true);
-    Serial.println("Timer1 started.");
+    Serial.write("Timer1 started.\n");
 }
 
 void set_imu_characteristics(BNO08x_RVC_Data *heading)
@@ -232,7 +232,7 @@ void handle_disconnect()
 {
     delay(500);                  // give the bluetooth stack the chance to get things ready
     pServer->startAdvertising(); // restart advertising
-    Serial.println("Advertising started...");
+    Serial.write("Advertising started...\n");
     advertising = true;
 }
 

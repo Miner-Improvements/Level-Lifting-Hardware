@@ -11,17 +11,17 @@ void handle_commands()
     std::string rx_data = get_rx_data();
     if (rx_data.length() > 0)
     {
-        Serial.println("Received command:");
-        Serial.println(rx_data.c_str());
+        Serial.write("Received command:\n");
+        Serial.write(rx_data.c_str());
         if (rx_data == "start_workout")
         {
-            Serial.println("Starting workout...");
+            Serial.write("Starting workout...\n");
             set_tx_characteristic("starting_workout");
             workoutOngoing = true;
         }
         else if (rx_data == "stop_workout")
         {
-            Serial.println("Stopping workout...");
+            Serial.write("Stopping workout...\n");
             set_tx_characteristic("stopping_workout");
             workoutOngoing = false;
         }
