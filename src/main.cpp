@@ -8,6 +8,7 @@
 #include "SerialManager.h"
 #include "BluetoothManager.h"
 #include "IMUManager.h"
+#include "BatteryManager.h"
 
 bool interruptCounter = false; // Loop occurs after 100 Hz ISR
 uint8_t txValue = 0;
@@ -33,6 +34,9 @@ void setup()
   // Initialize Bluetooth
   bluetooth_init();
 
+  // Initialize ADC
+  adc_setup();
+
   // ISR timer with divider of 80, making clock frequency = 1 MHz
   // Alarm occurs at 10000 cycles, making ISR frequency 1000000/10000 = 100 Hz
   // Start timer and enable alarm
@@ -57,10 +61,12 @@ void loop()
       }
       else
       {
-
+        
+        Serial.print("Battery level: ");
+        Serial.println(read_battery(), 2);
         set_imu_characteristics(heading); // set characteristics to be sent to client
 
-        interruptCounter = 0; // reset for timer ISR to trigger
+        interruptCounter = false; // reset for timer ISR to trigger
       }
     }
 
