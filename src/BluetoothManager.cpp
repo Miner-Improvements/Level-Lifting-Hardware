@@ -25,6 +25,13 @@ BLECharacteristic *pTimestampCharacteristic = nullptr;
 
 BLEAdvertising *pAdvertising = nullptr;
 
+float DEFAULT_YAW = 0.0;
+float DEFAULT_PITCH = 0.0;
+float DEFAULT_ROLL = 0.0;
+float DEFAULT_X_ACCEL = 0.05;
+float DEFAULT_Y_ACCEL = 0.05;
+float DEFAULT_Z_ACCEL = 9.801;
+
 void MyServerCallbacks::onConnect(BLEServer *pServer)
 {
     deviceConnected = true;
@@ -79,7 +86,7 @@ void bluetooth_init()
 
     pRxCharacteristic = pService_UART->createCharacteristic(
         CHARACTERISTIC_UUID_RX,
-        BLECharacteristic::PROPERTY_WRITE);
+        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
     pRxCharacteristic->addDescriptor(new BLE2902());
     pRxCharacteristic->setCallbacks(new MyRXCharacteristicCallbacks());
 
@@ -179,6 +186,48 @@ void set_imu_characteristics(BNO08x_RVC_Data *heading)
     Serial.write("Read successfully!\n");
 }
 
+void set_imu_characteristics()
+{
+
+    float imu_vals[3] = {DEFAULT_X_ACCEL, DEFAULT_Y_ACCEL, DEFAULT_Z_ACCEL};
+    uint8_t *data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+    // convert imu_vals to byte array
+    memcpy(data, imu_vals, 3 * sizeof(float));
+    // convert timer to byte array
+    uint64_t temp = timerRead(Timer1);
+    memcpy(data + 3 * sizeof(float), &temp, sizeof(uint64_t));
+    // pYawCharacteristic->setValue(DEFAULT_YAW);
+    // // Serial.write("Yaw updated.\n");
+    // pPitchCharacteristic->setValue(DEFAULT_PITCH);
+    // // Serial.write("Pitch updated.\n");
+    // pRollCharacteristic->setValue(DEFAULT_ROLL);
+    // // Serial.write("Roll updated.\n");
+    // pXAccelCharacteristic->setValue(DEFAULT_X_ACCEL);
+    // // Serial.write("X accel updated.\n");
+    // pYAccelCharacteristic->setValue(DEFAULT_Y_ACCEL);
+    // Serial.write("Y accel updated.\n");
+    pZAccelCharacteristic->setValue(data, 3 * sizeof(float) + sizeof(uint64_t));
+    pZAccelCharacteristic->notify();
+    // Serial.write("Z accel updated.\n");
+    delete[] data;
+
+    // pTimestampCharacteristic->setValue((uint8_t *)&temp, 8);
+    // Serial.write("Timer updated.\n");
+
+    Serial.write("Read successfully!\n");
+}
+
+void set_tx_characteristic(std::string data)
+{
+    pTxCharacteristic->setValue(data);
+    pTxCharacteristic->notify();
+}
+
+void clear_rx_characteristic()
+{
+    pRxCharacteristic->setValue("");
+}
+
 void handle_disconnect()
 {
     delay(500);                  // give the bluetooth stack the chance to get things ready
@@ -191,4 +240,10 @@ void handle_connect()
 {
     // do stuff here on connecting
     advertising = false; // could also be put in onConnected callback
+}
+
+std::string get_rx_data()
+{
+    std::string rx_data = pRxCharacteristic->getValue();
+    return rx_data;
 }

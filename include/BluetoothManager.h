@@ -7,9 +7,9 @@
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
-#define SERVICE_UUID_UART "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
-#define CHARACTERISTIC_UUID_TX "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
-#define CHARACTERISTIC_UUID_RX "ac9a41ba-9764-41a6-837f-fc08f2b29d28"
+#define SERVICE_UUID_UART "bf854c21-e070-446c-9849-305c7188a693"
+#define CHARACTERISTIC_UUID_TX "78628d2b-0008-4d46-b2c4-b755bf2c8c01"
+#define CHARACTERISTIC_UUID_RX "d95dc802-137e-4d13-a3f1-6f384193b7d7"
 #define SERVICE_UUID_IMU "91da3684-137e-4473-8fd2-b112126b19e1"
 #define CHARACTERISTIC_UUID_YAW "694b27b3-7c84-4a7e-a58c-baf08b34cc0c"
 #define CHARACTERISTIC_UUID_PITCH "58499525-a4cf-4bb9-9b16-a6ec73065923"
@@ -46,8 +46,16 @@ void bluetooth_init();
 
 void set_imu_characteristics(BNO08x_RVC_Data *heading);
 
+void set_imu_characteristics();
+
 void handle_disconnect();
 
 void handle_connect();
+
+void set_tx_characteristic(std::string data);
+
+std::string get_rx_data();
+
+void clear_rx_characteristic();
 
 #endif
