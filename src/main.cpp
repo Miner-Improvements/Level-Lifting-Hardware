@@ -8,6 +8,7 @@
 #include "SerialManager.h"
 #include "BluetoothManager.h"
 #include "IMUManager.h"
+#include "WorkoutManager.h"
 
 bool interruptCounter = false; // Loop occurs after 100 Hz ISR
 uint8_t txValue = 0;
@@ -28,7 +29,7 @@ void setup()
   serial_init();
 
   // Initialize IMU
-  imu_init();
+  // imu_init();
 
   // Initialize Bluetooth
   bluetooth_init();
@@ -46,23 +47,15 @@ void loop()
 {
 
   // only deal with BLE characteristics when device connected to listen
-  if (deviceConnected)
+  if (interruptCounter)
   {
-    if (interruptCounter)
+    if (deviceConnected)
     {
-
-      if (!(rvc->read(heading)))
-      {                             // read rvc data
-        Serial.write("Not Read\n"); // indiciate if unsuccessful
-      }
-      else
-      {
-
-        set_imu_characteristics(heading); // set characteristics to be sent to client
-
-        interruptCounter = 0; // reset for timer ISR to trigger
-      }
+      handle_workout();  // handle workout data from IMU if workoutOngoing
+      handle_commands(); // handle commands from app
     }
+
+    interruptCounter = 0; // reset for timer ISR to trigger
 
     // incrementally set txValue for testing purposes, then notify
     // pTxCharacteristic->setValue(&txValue, 1);
