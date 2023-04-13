@@ -13,7 +13,7 @@ void handle_commands()
     {
         Serial.write("Received command:\n");
         Serial.write(rx_data.c_str());
-        if (rx_data == "start_workout")
+        if (rx_data == "start_workout" || rx_data == "start_workout\n")
         {
             Serial.write("Starting workout...\n");
             set_tx_characteristic("starting_workout");
