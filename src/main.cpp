@@ -29,7 +29,7 @@ void setup()
   serial_init();
 
   // Initialize IMU
-  // imu_init();
+  imu_init();
 
   // Initialize Bluetooth
   bluetooth_init();
