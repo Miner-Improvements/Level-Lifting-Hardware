@@ -15,13 +15,8 @@ BLECharacteristic *pTxCharacteristic = nullptr;
 BLECharacteristic *pRxCharacteristic = nullptr;
 
 BLEService *pService_IMU = nullptr;
-BLECharacteristic *pYawCharacteristic = nullptr;
-BLECharacteristic *pPitchCharacteristic = nullptr;
-BLECharacteristic *pRollCharacteristic = nullptr;
-BLECharacteristic *pXAccelCharacteristic = nullptr;
-BLECharacteristic *pYAccelCharacteristic = nullptr;
-BLECharacteristic *pZAccelCharacteristic = nullptr;
-BLECharacteristic *pTimestampCharacteristic = nullptr;
+BLECharacteristic *pAngularCharacteristic = nullptr;
+BLECharacteristic *pAccelCharacteristic = nullptr;
 
 BLEAdvertising *pAdvertising = nullptr;
 
@@ -90,47 +85,17 @@ void bluetooth_init()
     pRxCharacteristic->addDescriptor(new BLE2902());
     pRxCharacteristic->setCallbacks(new MyRXCharacteristicCallbacks());
 
-    pYawCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_YAW,
+    pAngularCharacteristic = pService_IMU->createCharacteristic(
+        CHARACTERISTIC_UUID_ANGULAR,
         BLECharacteristic::PROPERTY_NOTIFY |
             BLECharacteristic::PROPERTY_READ);
-    pYawCharacteristic->addDescriptor(new BLE2902);
+    pAngularCharacteristic->addDescriptor(new BLE2902);
 
-    pPitchCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_PITCH,
+    pAccelCharacteristic = pService_IMU->createCharacteristic(
+        CHARACTERISTIC_UUID_ACCEL,
         BLECharacteristic::PROPERTY_NOTIFY |
             BLECharacteristic::PROPERTY_READ);
-    pPitchCharacteristic->addDescriptor(new BLE2902);
-
-    pRollCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_ROLL,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ);
-    pRollCharacteristic->addDescriptor(new BLE2902);
-
-    pXAccelCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_X_ACCEL,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ);
-    pXAccelCharacteristic->addDescriptor(new BLE2902);
-
-    pYAccelCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_Y_ACCEL,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ);
-    pYAccelCharacteristic->addDescriptor(new BLE2902);
-
-    pZAccelCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_Z_ACCEL,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ);
-    pZAccelCharacteristic->addDescriptor(new BLE2902);
-
-    pTimestampCharacteristic = pService_IMU->createCharacteristic(
-        CHARACTERISTIC_UUID_TIMESTAMP,
-        BLECharacteristic::PROPERTY_NOTIFY |
-            BLECharacteristic::PROPERTY_READ);
-    pTimestampCharacteristic->addDescriptor(new BLE2902);
+    pAccelCharacteristic->addDescriptor(new BLE2902);
 
     Serial.write("BLE characteristics, descriptors, and callbacks set.");
 
@@ -157,31 +122,33 @@ void bluetooth_init()
 
 void set_imu_characteristics(BNO08x_RVC_Data *heading)
 {
-    // write IMU data to characteristics and notify for each
-    // TODO: dtmn if notifications for each characterisitc are necessary
-    //       could just notify timer and let that be the indicator
-    pYawCharacteristic->setValue(heading->yaw);
-    pYawCharacteristic->notify();
-    // Serial.write("Yaw updated.\n");
-    pPitchCharacteristic->setValue(heading->pitch);
-    pPitchCharacteristic->notify();
-    // Serial.write("Pitch updated.\n");
-    pRollCharacteristic->setValue(heading->roll);
-    pRollCharacteristic->notify();
-    // Serial.write("Roll updated.\n");
-    pXAccelCharacteristic->setValue(heading->x_accel);
-    pXAccelCharacteristic->notify();
-    // Serial.write("X accel updated.\n");
-    pYAccelCharacteristic->setValue(heading->y_accel);
-    pYAccelCharacteristic->notify();
-    // Serial.write("Y accel updated.\n");
-    pZAccelCharacteristic->setValue(heading->z_accel);
-    pZAccelCharacteristic->notify();
-    // Serial.write("Z accel updated.\n");
+    // get values from IMU and store in arrays
+    float accel_vals[3] = {heading->x_accel, heading->y_accel, heading->z_accel};
+    float angular_vals[3] = {heading->yaw, heading->pitch, heading->roll};
+
+    // create byte arrays to store data
+    uint8_t *accel_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+    uint8_t *angular_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+
+    // convert vals to byte arrays
+    memcpy(accel_data, accel_vals, 3 * sizeof(float));
+    memcpy(angular_data, angular_vals, 3 * sizeof(float));
+
+    // get timer value
     uint64_t temp = timerRead(Timer1);
-    pTimestampCharacteristic->setValue((uint8_t *)&temp, 8);
-    pTimestampCharacteristic->notify();
-    // Serial.write("Timer updated.\n");
+
+    // add timer value to end of byte arrays
+    memcpy(accel_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
+    memcpy(angular_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
+    // update Accel characteristic
+    pAccelCharacteristic->setValue(accel_data, 3 * sizeof(float) + sizeof(uint64_t));
+    pAccelCharacteristic->notify();
+    // update Angular characteristic
+    pAngularCharacteristic->setValue(angular_data, 3 * sizeof(float) + sizeof(uint64_t));
+    pAngularCharacteristic->notify();
+
+    delete[] accel_data;
+    delete[] angular_data;
 
     Serial.write("Read successfully!\n");
 }
@@ -189,27 +156,33 @@ void set_imu_characteristics(BNO08x_RVC_Data *heading)
 void set_imu_characteristics()
 {
 
-    float imu_vals[3] = {DEFAULT_X_ACCEL, DEFAULT_Y_ACCEL, DEFAULT_Z_ACCEL};
-    uint8_t *data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
-    // convert imu_vals to byte array
-    memcpy(data, imu_vals, 3 * sizeof(float));
-    // convert timer to byte array
+    // get values from IMU and store in arrays
+    float accel_vals[3] = {DEFAULT_X_ACCEL, DEFAULT_Y_ACCEL, DEFAULT_Z_ACCEL};
+    float angular_vals[3] = {DEFAULT_YAW, DEFAULT_PITCH, DEFAULT_ROLL};
+
+    // create byte arrays to store data
+    uint8_t *accel_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+    uint8_t *angular_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+
+    // convert vals to byte arrays
+    memcpy(accel_data, accel_vals, 3 * sizeof(float));
+    memcpy(angular_data, angular_vals, 3 * sizeof(float));
+
+    // get timer value
     uint64_t temp = timerRead(Timer1);
-    memcpy(data + 3 * sizeof(float), &temp, sizeof(uint64_t));
-    // pYawCharacteristic->setValue(DEFAULT_YAW);
-    // // Serial.write("Yaw updated.\n");
-    // pPitchCharacteristic->setValue(DEFAULT_PITCH);
-    // // Serial.write("Pitch updated.\n");
-    // pRollCharacteristic->setValue(DEFAULT_ROLL);
-    // // Serial.write("Roll updated.\n");
-    // pXAccelCharacteristic->setValue(DEFAULT_X_ACCEL);
-    // // Serial.write("X accel updated.\n");
-    // pYAccelCharacteristic->setValue(DEFAULT_Y_ACCEL);
-    // Serial.write("Y accel updated.\n");
-    pZAccelCharacteristic->setValue(data, 3 * sizeof(float) + sizeof(uint64_t));
-    pZAccelCharacteristic->notify();
-    // Serial.write("Z accel updated.\n");
-    delete[] data;
+
+    // add timer value to end of byte arrays
+    memcpy(accel_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
+    memcpy(angular_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
+    // update Accel characteristic
+    pAccelCharacteristic->setValue(accel_data, 3 * sizeof(float) + sizeof(uint64_t));
+    pAccelCharacteristic->notify();
+    // update Angular characteristic
+    pAngularCharacteristic->setValue(angular_data, 3 * sizeof(float) + sizeof(uint64_t));
+    pAngularCharacteristic->notify();
+
+    delete[] accel_data;
+    delete[] angular_data;
 
     // pTimestampCharacteristic->setValue((uint8_t *)&temp, 8);
     // Serial.write("Timer updated.\n");

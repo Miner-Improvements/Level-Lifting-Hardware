@@ -9,6 +9,7 @@
 #include "BluetoothManager.h"
 #include "IMUManager.h"
 #include "WorkoutManager.h"
+#include "board.h"
 
 bool interruptCounter = false; // Loop occurs after 100 Hz ISR
 uint8_t txValue = 0;
@@ -29,7 +30,10 @@ void setup()
   serial_init();
 
   // Initialize IMU
-  imu_init();
+  if (DEBUG != 1)
+  {
+    imu_init();
+  }
 
   // Initialize Bluetooth
   bluetooth_init();
