@@ -14,7 +14,7 @@ const float R1 = 100000.0;     // resistance of R1 (100K)
 const float R2 = 10000.0;      // resistance of R2 (10K)
 const float samples = 500.0;       // number of samples taken
 const float volt_ref = 1.1;    // 1.1 V internal ADC reference
-const float adc_max = 4096.0;  // maximum 12-bit adc value
+const float adc_max = 4095.0;  // maximum 12-bit adc value
 
 void adc_setup();
 float read_battery();

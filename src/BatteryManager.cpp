@@ -20,7 +20,7 @@ float read_battery()
     }
 
     battery_voltage = battery_sum / samples;
-    battery_voltage = (battery_voltage * volt_ref) / adc_max; // for internal 1.1v reference
+    battery_voltage = (battery_voltage / adc_max) * volt_ref; // for internal 1.1v reference
     // use it with divider circuit 
     // voltage = voltage / (R2/(R1+R2));
     // round value by two DP
