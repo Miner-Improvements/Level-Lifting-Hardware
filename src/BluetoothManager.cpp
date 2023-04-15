@@ -125,6 +125,11 @@ void set_imu_characteristics(BNO08x_RVC_Data *heading)
     // get values from IMU and store in arrays
     float accel_vals[3] = {heading->x_accel, heading->y_accel, heading->z_accel};
     float angular_vals[3] = {heading->yaw, heading->pitch, heading->roll};
+    // convert float to c_string
+
+    // convert heading->x_accel to c_string
+    Serial.write(std::to_string(heading->x_accel).c_str());
+    Serial.write("\n");
 
     // create byte arrays to store data
     uint8_t *accel_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
