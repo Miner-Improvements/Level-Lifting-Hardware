@@ -11,8 +11,9 @@ void handle_commands()
     std::string rx_data = get_rx_data();
     if (rx_data.length() > 0)
     {
-        Serial.write("Received command:\n");
+        Serial.write("Received command: ");
         Serial.write(rx_data.c_str());
+        Serial.write("\n");
         if (rx_data == "start_workout")
         {
             Serial.write("Starting workout...\n");
