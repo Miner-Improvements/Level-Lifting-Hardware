@@ -29,6 +29,7 @@ void setup()
   // Wait for serial monitor to open
   serial_init();
 
+/** Leave this here for now, may need to be updated. **/
   // Initialize IMU
   if (DEBUG != 1)
   {
@@ -38,6 +39,7 @@ void setup()
   // Initialize Bluetooth
   bluetooth_init();
 
+ /** Leave this here for now, may need to be updated. **/
   // ISR timer with divider of 80, making clock frequency = 1 MHz
   // Alarm occurs at 10000 cycles, making ISR frequency 1000000/10000 = 100 Hz
   // Start timer and enable alarm

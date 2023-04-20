@@ -15,11 +15,14 @@ BLECharacteristic *pTxCharacteristic = nullptr;
 BLECharacteristic *pRxCharacteristic = nullptr;
 
 BLEService *pService_IMU = nullptr;
+ 
+/** MIGHT NEED TO BE UPDATED. **/
 BLECharacteristic *pAngularCharacteristic = nullptr;
 BLECharacteristic *pAccelCharacteristic = nullptr;
 
 BLEAdvertising *pAdvertising = nullptr;
 
+/** MIGHT NEED TO BE UPDATED. **/
 float DEFAULT_YAW = 0.0;
 float DEFAULT_PITCH = 0.0;
 float DEFAULT_ROLL = 0.0;
@@ -54,6 +57,7 @@ void MyRXCharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic)
     }
 }
 
+  /** NNEEDS TO BE UPDATED: new data format. **/
 void bluetooth_init()
 {
     // Create the BLE Device
@@ -72,6 +76,7 @@ void bluetooth_init()
     pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 21);
     Serial.write("BLE Services created.\n");
 
+/** MIGHT NEED TO BE UPDATED. **/
     // Create characteristics and add descriptors
     pTxCharacteristic = pService_UART->createCharacteristic(
         CHARACTERISTIC_UUID_TX,
@@ -120,6 +125,7 @@ void bluetooth_init()
     Serial.write("Timer1 started.\n");
 }
 
+/** NEEDS TO BE UPDATED. **/
 void set_imu_characteristics(BNO08x_RVC_Data *heading)
 {
     // get values from IMU and store in arrays
@@ -153,6 +159,7 @@ void set_imu_characteristics(BNO08x_RVC_Data *heading)
     Serial.write("Read successfully!\n");
 }
 
+/** NEEDS TO BE UPDATED. **/
 void set_imu_characteristics()
 {
 

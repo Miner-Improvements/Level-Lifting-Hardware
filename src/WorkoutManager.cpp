@@ -28,7 +28,7 @@ void handle_commands()
         clear_rx_characteristic();
     }
 }
-
+/** NEEDS TO BE UPDATE: NEW DATA FORMAT. **/
 void handle_workout()
 {
     if (workoutOngoing)
@@ -45,6 +45,7 @@ void handle_workout()
             }
             else
             {
+/** MIGHT NEED TO BE UPDATED.*/
                 set_imu_characteristics(heading); // set characteristics to be sent to client
             }
         }

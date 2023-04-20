@@ -1,9 +1,11 @@
 #include "IMUManager.h"
 #include <HardwareSerial.h>
 
+/** NEEDS TO BE UPDATED. **/
 Adafruit_BNO08x_RVC *rvc;
 BNO08x_RVC_Data *heading = new BNO08x_RVC_Data();
 
+/** NEEDS TO BE UPDATED. **/
 void imu_init()
 {
     Serial.write("Adafruit BNO08x IMU - UART-RVC mode\n");
