@@ -33,7 +33,10 @@ void setup()
   // Initialize IMU
   if (DEBUG != 1)
   {
-    imu_init();
+    while(!imu_init())
+      delay(100);
+    printProdIds();
+    setReports();
   }
 
   // Initialize Bluetooth
@@ -51,12 +54,9 @@ void setup()
 
 void loop()
 {
-
   // only deal with BLE characteristics when device connected to listen
-  if (interruptCounter)
-  {
-    if (deviceConnected)
-    {
+  if (interruptCounter) {
+    if (deviceConnected) {
       handle_workout();  // handle workout data from IMU if workoutOngoing
       handle_commands(); // handle commands from app
     }

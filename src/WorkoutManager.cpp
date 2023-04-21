@@ -5,6 +5,10 @@
 #include "IMUManager.h"
 
 bool workoutOngoing = false;
+sh2_SensorValue_t sensorEvent;
+sh2_Accelerometer_t accelVector;
+sh2_Accelerometer_t gravityVector;
+sh2_Gyroscope_t gyroVector;
 
 void handle_commands()
 {
@@ -28,25 +32,39 @@ void handle_commands()
         clear_rx_characteristic();
     }
 }
-/** NEEDS TO BE UPDATE: NEW DATA FORMAT. **/
+/** NEEDS TO BE UPDATED: NEW DATA FORMAT. **/
 void handle_workout()
 {
     if (workoutOngoing)
     {
         if (DEBUG == 1)
         {
-            set_imu_characteristics();
+            // set_imu_characteristics();
         }
         else
         {
-            if (!(rvc->read(heading)))
-            {                               // read rvc data
-                Serial.write("Not Read\n"); // indiciate if unsuccessful
+            // if BNO08x gets reset somehow, reports will need to be set again
+            if (bno08x.wasReset()) {
+                Serial.write("Sensor was reset! Setting up reports again...\n");
+                setReports();
             }
-            else
-            {
-/** MIGHT NEED TO BE UPDATED.*/
-                set_imu_characteristics(heading); // set characteristics to be sent to client
+            // Trying this while loop out,might need to be changed.
+            // Tead all the reports available each time the interrupt triggers this
+            // that we should get reports (every 10ms at the time of writing).
+            while(bno08x.getSensorEvent(&sensorValue)) {
+                switch (sensorValue.sensorId) {
+                    case SH2_ACCELEROMETER:
+                        Serial.write("Accelerometer report received.\n");
+                        set_accel_characteristic(sensorValue.un.accelerometer);
+                        break;
+                    case SH2_GYROSCOPE_CALIBRATED:
+                        Serial.write("Gyroscope report received.\n");
+                        set_gyro_characteristic(sensorValue.un.gyroscope);
+                        break;
+                    case SH2_GRAVITY:
+                        // TDB
+                        break;
+                }
             }
         }
     }
