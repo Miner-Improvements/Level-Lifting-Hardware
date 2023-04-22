@@ -2,6 +2,7 @@
 #define BLUETOOTH_MANAGER_H
 
 #include <BLEServer.h>
+#include <Adafruit_BNO08x.h>
 
 #define bleServerName "LevelLifting Wearable Tracker"
 
@@ -20,11 +21,11 @@ class BLEService;
 class BLECharacteristic;
 class BLEAdvertising;
 typedef struct hw_timer_s hw_timer_t;
-typedef struct BNO08xRVCData BNO08x_RVC_Data;
 
 extern bool deviceConnected;
 extern bool advertising;
 extern hw_timer_t *Timer1;
+extern sh2_Accelerometer_t currentGravityVector;
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
@@ -39,9 +40,9 @@ class MyRXCharacteristicCallbacks : public BLECharacteristicCallbacks
 
 void bluetooth_init();
 
-void set_imu_characteristics(BNO08x_RVC_Data *heading);
+void set_imu_characteristic();
 
-void set_imu_characteristics();
+void set_imu_characteristics_DEBUG();
 
 void handle_disconnect();
 

@@ -3,11 +3,12 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include <HardwareSerial.h>
-#include <Adafruit_BNO08x_RVC.h>
 
 bool deviceConnected = false;
 bool advertising = false;
 hw_timer_t *Timer1 = nullptr;
+sh2_Accelerometer_t currentGravityVector;
+extern sh2_SensorValue_t sensorValue;
 
 BLEServer *pServer = nullptr;
 BLEService *pService_UART = nullptr;
@@ -57,7 +58,6 @@ void MyRXCharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic)
     }
 }
 
-  /** NNEEDS TO BE UPDATED: new data format. **/
 void bluetooth_init()
 {
     // Create the BLE Device
@@ -76,7 +76,6 @@ void bluetooth_init()
     pService_IMU = pServer->createService(BLEUUID(SERVICE_UUID_IMU), 21);
     Serial.write("BLE Services created.\n");
 
-/** MIGHT NEED TO BE UPDATED. **/
     // Create characteristics and add descriptors
     pTxCharacteristic = pService_UART->createCharacteristic(
         CHARACTERISTIC_UUID_TX,
@@ -125,42 +124,66 @@ void bluetooth_init()
     Serial.write("Timer1 started.\n");
 }
 
-/** NEEDS TO BE UPDATED. **/
-void set_imu_characteristics(BNO08x_RVC_Data *heading)
+void set_imu_characteristic()
 {
-    // get values from IMU and store in arrays
-    float accel_vals[3] = {heading->x_accel, heading->y_accel, heading->z_accel};
-    float angular_vals[3] = {heading->yaw, heading->pitch, heading->roll};
+    // init variables outside of switch
+    float sensorVector[3];
+    // create byte array to store data: 3 floats and 1 unsinged 64-bit int
+    unsigned int sensorDataSize = 3 * sizeof(float) + sizeof(uint64_t);
+    uint8_t *sensorData = new uint8_t[sensorDataSize];
 
-    // create byte arrays to store data
-    uint8_t *accel_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
-    uint8_t *angular_data = new uint8_t[3 * sizeof(float) + sizeof(uint64_t)];
+    switch (sensorValue.sensorId) {
+        case SH2_ACCELEROMETER:
+            // get values from accelerometer vector, subtract gravity vector, and store in array
+            // we don't want to include gravity in our numbers
+            sensorVector[0] = sensorValue.un.accelerometer.x - currentGravityVector.x;
+            sensorVector[1] = sensorValue.un.accelerometer.y - currentGravityVector.y; 
+            sensorVector[2] = sensorValue.un.accelerometer.z - currentGravityVector.z;
+            
+            // store data in byte array
+            memcpy(sensorData, sensorVector, 3 * sizeof(float));
+            // add timestamp value to end of byte array
+            memcpy(sensorData + 3 * sizeof(float), &(sensorValue.timestamp), sizeof(uint64_t));
+            
+            // update accel characteristic with constructed byte array
+            pAccelCharacteristic->setValue(sensorData, sensorDataSize);
+            pAccelCharacteristic->notify();
 
-    // convert vals to byte arrays
-    memcpy(accel_data, accel_vals, 3 * sizeof(float));
-    memcpy(angular_data, angular_vals, 3 * sizeof(float));
+            Serial.write("Updated accelerometer characteristic.\n");
+            break;
+        case SH2_GYROSCOPE_CALIBRATED:
+            // get values from gyroscope vector and store in array
+            sensorVector[0] = sensorValue.un.gyroscope.x;
+            sensorVector[1] = sensorValue.un.gyroscope.y;
+            sensorVector[2] = sensorValue.un.gyroscope.z;
 
-    // get timer value
-    uint64_t temp = timerRead(Timer1);
+            // create byte array to store data
+            sensorData = new uint8_t[sensorDataSize];
+            // store data in byte array
+            memcpy(sensorData, sensorVector, 3 * sizeof(float));
+            // add timestamp value to end of byte array
+            memcpy(sensorData + 3 * sizeof(float), &(sensorValue.timestamp), sizeof(uint64_t));
 
-    // add timer value to end of byte arrays
-    memcpy(accel_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
-    memcpy(angular_data + 3 * sizeof(float), &temp, sizeof(uint64_t));
-    // update Accel characteristic
-    pAccelCharacteristic->setValue(accel_data, 3 * sizeof(float) + sizeof(uint64_t));
-    pAccelCharacteristic->notify();
-    // update Angular characteristic
-    pAngularCharacteristic->setValue(angular_data, 3 * sizeof(float) + sizeof(uint64_t));
-    pAngularCharacteristic->notify();
+            // update anuglar characteristic with contructed byte array
+            pAngularCharacteristic->setValue(sensorData, sensorDataSize);
+            pAngularCharacteristic->notify();
+            
+            Serial.write("Updated gyroscope characteristic.\n");
+            break;
+        case SH2_GRAVITY:
+            currentGravityVector = sensorValue.un.gravity;
+            Serial.write("Updated current gravity vector.\n");
+            break; 
+        default:
+            Serial.write("Received unexpected sensor ID.\n");
+    }
 
-    delete[] accel_data;
-    delete[] angular_data;
+    delete[] sensorData;
 
-    Serial.write("Read successfully!\n");
+    return;
 }
 
-/** NEEDS TO BE UPDATED. **/
-void set_imu_characteristics()
+void set_imu_characteristics_DEBUG()
 {
 
     // get values from IMU and store in arrays

@@ -3,12 +3,11 @@
 #include "BluetoothManager.h"
 #include "board.h"
 #include "IMUManager.h"
+#include <Adafruit_BNO08x.h>
 
+extern Adafruit_BNO08x bno08x;
+extern sh2_SensorValue_t sensorValue;
 bool workoutOngoing = false;
-sh2_SensorValue_t sensorEvent;
-sh2_Accelerometer_t accelVector;
-sh2_Accelerometer_t gravityVector;
-sh2_Gyroscope_t gyroVector;
 
 void handle_commands()
 {
@@ -32,14 +31,14 @@ void handle_commands()
         clear_rx_characteristic();
     }
 }
-/** NEEDS TO BE UPDATED: NEW DATA FORMAT. **/
+
 void handle_workout()
 {
     if (workoutOngoing)
     {
         if (DEBUG == 1)
         {
-            // set_imu_characteristics();
+            set_imu_characteristics_DEBUG();
         }
         else
         {
@@ -48,23 +47,13 @@ void handle_workout()
                 Serial.write("Sensor was reset! Setting up reports again...\n");
                 setReports();
             }
-            // Trying this while loop out,might need to be changed.
-            // Tead all the reports available each time the interrupt triggers this
-            // that we should get reports (every 10ms at the time of writing).
-            while(bno08x.getSensorEvent(&sensorValue)) {
-                switch (sensorValue.sensorId) {
-                    case SH2_ACCELEROMETER:
-                        Serial.write("Accelerometer report received.\n");
-                        set_accel_characteristic(sensorValue.un.accelerometer);
-                        break;
-                    case SH2_GYROSCOPE_CALIBRATED:
-                        Serial.write("Gyroscope report received.\n");
-                        set_gyro_characteristic(sensorValue.un.gyroscope);
-                        break;
-                    case SH2_GRAVITY:
-                        // TDB
-                        break;
-                }
+            // Read one report each time the interrupt triggers this
+            // We should get reports (every 10ms at the time of writing).
+            if(!bno08x.getSensorEvent(&sensorValue)) {
+                Serial.write("Couldn't get sensor report!\n");
+            }
+            else {
+                set_imu_characteristic();
             }
         }
     }
