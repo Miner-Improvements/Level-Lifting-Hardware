@@ -2,6 +2,7 @@
 #define BATTERY_MANAGER_H
 
 #include <driver/adc.h>
+#include "esp_adc_cal.h"
 
 //read battery voltage per %
 extern int battery;

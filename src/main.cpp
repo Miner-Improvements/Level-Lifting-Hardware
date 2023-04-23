@@ -65,6 +65,7 @@ void loop()
         Serial.print("Battery level: ");
         Serial.println(read_battery(), 2);
         battery_sum = 0;
+
         set_imu_characteristics(heading); // set characteristics to be sent to client
 
         interruptCounter = false; // reset for timer ISR to trigger
