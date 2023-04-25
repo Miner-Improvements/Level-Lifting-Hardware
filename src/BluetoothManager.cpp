@@ -149,7 +149,11 @@ void set_imu_characteristic()
             pAccelCharacteristic->setValue(sensorData, sensorDataSize);
             pAccelCharacteristic->notify();
 
-            Serial.write("Updated accelerometer characteristic.\n");
+            char buffer[20];
+            sprintf(buffer, "%u", sensorValue.timestamp);
+
+            Serial.write("Updated timestamp: ");
+            Serial.write(buffer);
             break;
         case SH2_GYROSCOPE_CALIBRATED:
             // get values from gyroscope vector and store in array
