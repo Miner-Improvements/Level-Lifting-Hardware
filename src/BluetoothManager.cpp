@@ -153,10 +153,10 @@ void set_imu_characteristic()
             pAccelCharacteristic->setValue(sensorData, sensorDataSize);
             pAccelCharacteristic->notify();
 
-            char buffer[50];
-            sprintf(buffer, "Timestamp: %u\n", time);
+            char buffer[100];
+            sprintf(buffer, "Acceleration, x: %f \tTimestamp: %u\n", sensorVector[0], time);
 
-            Serial.write("Updated accelerometer characteristic. ");
+            // Serial.write("Updated accelerometer characteristic. ");
             Serial.write(buffer);
             break;
         case SH2_GYROSCOPE_CALIBRATED:
@@ -176,14 +176,15 @@ void set_imu_characteristic()
             pAngularCharacteristic->setValue(sensorData, sensorDataSize);
             pAngularCharacteristic->notify();
             
-            Serial.write("Updated gyroscope characteristic.\n");
+            // Serial.write("Updated gyroscope characteristic.\n");
             break;
         case SH2_GRAVITY:
             currentGravityVector = sensorValue.un.gravity;
-            Serial.write("Updated current gravity vector.\n");
+            // Serial.write("Updated current gravity vector.\n");
             break; 
         default:
-            Serial.write("Received unexpected sensor ID.\n");
+            // Serial.write("Received unexpected sensor ID.\n");
+            break;
     }
 
     delete[] sensorData;
