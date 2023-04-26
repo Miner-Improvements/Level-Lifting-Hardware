@@ -119,7 +119,9 @@ void bluetooth_init()
     // log waiting status
     Serial.write("Waiting for connection...\n");
 
-    // TODO: Make sure this is initializing the timer properly
+    // https://docs.espressif.com/projects/esp-idf/en/v4.3/esp32/api-reference/peripherals/timer.html
+    //      "By default the clock source is APB_CLK (typically 80 MHz)."
+    // So with a divider of 2, the timer should be at rate of 40MHz
     Timer1 = timerBegin(1, 2, true);
     Serial.write("Timer1 started.\n");
 }
@@ -131,6 +133,8 @@ void set_imu_characteristic()
     // create byte array to store data: 3 floats and 1 unsinged 64-bit int
     unsigned int sensorDataSize = 3 * sizeof(float) + sizeof(uint64_t);
     uint8_t *sensorData = new uint8_t[sensorDataSize];
+    // get timer value
+    uint64_t time = timerRead(Timer1);
 
     switch (sensorValue.sensorId) {
         case SH2_ACCELEROMETER:
@@ -143,16 +147,16 @@ void set_imu_characteristic()
             // store data in byte array
             memcpy(sensorData, sensorVector, 3 * sizeof(float));
             // add timestamp value to end of byte array
-            memcpy(sensorData + 3 * sizeof(float), &(timer1), sizeof(uint64_t));
+            memcpy(sensorData + 3 * sizeof(float), &time, sizeof(uint64_t));
             
             // update accel characteristic with constructed byte array
             pAccelCharacteristic->setValue(sensorData, sensorDataSize);
             pAccelCharacteristic->notify();
 
             char buffer[50];
-            sprintf(buffer, "Timestamp: %u  Delay: %u\n", sensorValue.timestamp, sensorValue.delay);
+            sprintf(buffer, "Timestamp: %u\n", time);
 
-            // Serial.write("Updated accelerometer characteristic.\n");
+            Serial.write("Updated accelerometer characteristic. ");
             Serial.write(buffer);
             break;
         case SH2_GYROSCOPE_CALIBRATED:
@@ -166,17 +170,17 @@ void set_imu_characteristic()
             // store data in byte array
             memcpy(sensorData, sensorVector, 3 * sizeof(float));
             // add timestamp value to end of byte array
-            memcpy(sensorData + 3 * sizeof(float), &(sensorValue.timestamp), sizeof(uint64_t));
+            memcpy(sensorData + 3 * sizeof(float), &time, sizeof(uint64_t));
 
             // update anuglar characteristic with contructed byte array
             pAngularCharacteristic->setValue(sensorData, sensorDataSize);
             pAngularCharacteristic->notify();
             
-            // Serial.write("Updated gyroscope characteristic.\n");
+            Serial.write("Updated gyroscope characteristic.\n");
             break;
         case SH2_GRAVITY:
             currentGravityVector = sensorValue.un.gravity;
-            // Serial.write("Updated current gravity vector.\n");
+            Serial.write("Updated current gravity vector.\n");
             break; 
         default:
             Serial.write("Received unexpected sensor ID.\n");

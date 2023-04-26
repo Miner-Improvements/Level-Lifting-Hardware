@@ -21,6 +21,7 @@ void handle_commands()
             Serial.write("Starting workout...\n");
             set_tx_characteristic("starting_workout");
             workoutOngoing = true;
+            // TODO: should also init timer1... somewhere
         }
         else if (rx_data == "stop_workout")
         {
@@ -53,6 +54,7 @@ void handle_workout()
                 // Serial.write("Couldn't get sensor report!\n");
             }
             else {
+                
                 set_imu_characteristic();
             }
         }
