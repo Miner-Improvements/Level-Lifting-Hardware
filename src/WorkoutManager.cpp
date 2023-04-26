@@ -50,7 +50,7 @@ void handle_workout()
             // Read one report each time the interrupt triggers this
             // We should get reports (every 10ms at the time of writing).
             if(!bno08x.getSensorEvent(&sensorValue)) {
-                Serial.write("Couldn't get sensor report!\n");
+                // Serial.write("Couldn't get sensor report!\n");
             }
             else {
                 set_imu_characteristic();

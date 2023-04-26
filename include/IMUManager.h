@@ -17,7 +17,7 @@
 // but not for I2C or UART
 #define BNO08X_RESET -1
 
-#define IMU_REPORT_INTERVAL_US 10000U
+#define IMU_REPORT_INTERVAL_US 100000U
 
 extern Adafruit_BNO08x bno08x;
 extern sh2_SensorValue_t sensorValue;
